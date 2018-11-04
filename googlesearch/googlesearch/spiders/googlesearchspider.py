@@ -10,6 +10,7 @@ from scrapy.spiders import Spider
 from googlesearch.items import GooglesearchItem
 from scrapy import signals
 from scrapy.xlib.pydispatch import dispatcher
+from argparse import ArgumentParser
 
 
 class GooglesearchspiderSpider(scrapy.Spider):
@@ -23,6 +24,7 @@ class GooglesearchspiderSpider(scrapy.Spider):
 	
 	def __init__(self):
 		self.frequency_count = dict(VidiU = 0,Beam = 0,LiveShell = 0,Tricaster = 0,Livestream = 0,)
+		self.base_url = 'https://www.google.com.tw'
 		dispatcher.connect(self.spider_closed, signals.spider_closed)
 
 	def frequency_renew(self,key_word,doc):
@@ -44,14 +46,12 @@ class GooglesearchspiderSpider(scrapy.Spider):
 			yield item
 
 
-		base_url = 'https://www.google.com.tw'
-
 		# 抓取下一頁之url
 		next_page = hxs.select('//table[@id="nav"]//td[contains(@class, "b") and position() = last()]/a')
 
 		# 訪問下一頁之url
 		if next_page:
-			request_url = base_url+next_page.select('.//@href').extract()[0]
+			request_url = self.base_url+next_page.select('.//@href').extract()[0]
 			yield Request(url=request_url, callback=self.parse)
 
 	def spider_closed(self, spider):
