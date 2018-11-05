@@ -13,6 +13,8 @@ from urllib.parse import urlparse,parse_qsl
 import w3lib
 from scrapy.http import FormRequest
 import requests
+from scrapy.spider import BaseSpider
+from scrapy.utils.misc import arg_to_iter
 
 
 
@@ -24,15 +26,29 @@ class GooglesearchspiderSpider(scrapy.Spider):
 	allowed_domains = []
 
 	# 填寫要訪問的url
-	start_urls = ['https://www.google.com.tw/search?q=livebox']
+	#start_urls = ['https://www.google.com.tw/search?q=livebox']
 
+	base_url_fmt = 'https://www.google.com.tw/search?q={query}'
 
-	def __init__(self):
+	def __init__(self,queries):
+		self.queries = queries.split(';')
 		self.frequency_count = dict(vidiu = 0,beam = 0,liveshell = 0,tricaster = 0,livestream = 0)
 		self.base_url = 'https://www.google.com.tw'
 		self.url2weight = {}
 		self.done = False
+		
 		dispatcher.connect(self.spider_closed, signals.spider_closed)
+
+	def start_requests(self):
+
+		for query in arg_to_iter(self.queries):
+			url = self.make_google_search_request(query)
+			
+			yield Request(url=url,callback = self.parse)
+
+	def make_google_search_request(self, query):
+
+		return self.base_url_fmt.format(query='+'.join(query.split()).strip('+'))
 
 	def frequency_renew(self,key_word,doc,score):
 		doc = doc.lower()
@@ -49,7 +65,6 @@ class GooglesearchspiderSpider(scrapy.Spider):
 			
 			name = u''.join(sel.select(".//div[@class='s']//text()").extract())
 			
-			#url = self._parse_url(sel.select('.//a/@href').extract()[0])
 			url = sel.select('.//a/@href').extract()[0]
 			
 			
@@ -58,23 +73,25 @@ class GooglesearchspiderSpider(scrapy.Spider):
 			
 			if url.startswith('http'):
 				formdata = {'name': url}
+
 				
 				yield FormRequest(url = 'https://checkpagerank.net/check-page-rank.php',
-                    		formdata=formdata,
-                    		meta={'url':url},
-                            callback=self.parse1)
-
+							formdata=formdata,
+							meta={'url':url},
+							callback=self.parsePageRank)
+				
 
 				
 			else:
 				url = self.base_url+url
 				formdata = {'name': url}
+
 				
 				yield FormRequest(url = 'https://checkpagerank.net/check-page-rank.php',
-                    		formdata=formdata,
-                    		meta={'url':url},
-                            callback=self.parse1)
-
+							formdata=formdata,
+							meta={'url':url},
+							callback=self.parsePageRank)
+				
 
 			if self.done:
 				self.done = False
@@ -83,18 +100,17 @@ class GooglesearchspiderSpider(scrapy.Spider):
 			
 			
 
-
+		
 		# 抓取下一頁之url
 		next_page = hxs.select('//table[@id="nav"]//td[contains(@class, "b") and position() = last()]/a')
 
 		# 訪問下一頁之url
 		if next_page:
 			request_url = self.base_url+next_page.select('.//@href').extract()[0]
-			#print(request_url)
 			yield Request(url=request_url, callback=self.parse)
 		
 
-	def parse1(self,response):
+	def parsePageRank(self,response):
 		#response = fromstring(response.content)
 		
 		
@@ -123,31 +139,19 @@ class GooglesearchspiderSpider(scrapy.Spider):
 		name = response.meta['name']
 		url = response.url
 
-
 		
 		html = w3lib.html.remove_tags(
-		    w3lib.html.remove_tags_with_content(
-		        sel.xpath('//body').extract()[0],
-		        which_ones=('script',)
-		    )
+			w3lib.html.remove_tags_with_content(
+				sel.xpath('//body').extract()[0],
+				which_ones=('script',)
+			)
 		)
 		
 		pattern = re.compile(r"\s+")
 		html = pattern.sub(" ", html)
 		item['name'] = name
 		item['description'] = html
-		item['url'] = url
-		
-
-		
-
-		#r = requests.post('https://checkpagerank.net/check-page-rank.php', data = formdata)
-
-		#self.parse1(r)
-		#time.sleep(90)
-		
-		
-        
+		item['url'] = url		
 		item['score'] = self.url2weight[url]
 		list(map(lambda key_word:self.frequency_renew(key_word,item['description'],item['score']), self.frequency_count))
 		list(map(lambda key_word:self.frequency_renew(key_word,item['name'],item['score']), self.frequency_count))
