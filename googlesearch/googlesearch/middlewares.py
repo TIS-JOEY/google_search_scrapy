@@ -6,7 +6,8 @@
 # https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
 from scrapy import signals
-
+from scrapy.conf import settings
+import random,os
 
 class GooglesearchSpiderMiddleware(object):
     # Not all methods need to be defined. If a method is not defined,

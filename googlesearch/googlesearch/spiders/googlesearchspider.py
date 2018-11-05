@@ -2,15 +2,19 @@
 import scrapy
 from scrapy.selector import HtmlXPathSelector
 import re
-import os
-import sys
-import json
 from scrapy.http import Request
 from scrapy.spiders import Spider
 from googlesearch.items import GooglesearchItem
 from scrapy import signals
 from scrapy.xlib.pydispatch import dispatcher
 from argparse import ArgumentParser
+from scrapy.selector import Selector
+from urllib.parse import urlparse,parse_qsl
+import w3lib
+from scrapy.http import FormRequest
+import requests
+
+
 
 
 class GooglesearchspiderSpider(scrapy.Spider):
@@ -20,30 +24,64 @@ class GooglesearchspiderSpider(scrapy.Spider):
 	allowed_domains = []
 
 	# 填寫要訪問的url
-	start_urls = ['https://www.google.com.tw/search?q=vidiu&ei=YgnfW_7INoS18QW1z5mYCg&start=0&sa=N&ved=0ahUKEwj-geWngLveAhWEWrwKHbVnBqM4ChDy0wMIgwE&biw=1280&bih=698']
-	
+	start_urls = ['https://www.google.com.tw/search?q=livebox']
+
+
 	def __init__(self):
-		self.frequency_count = dict(VidiU = 0,Beam = 0,LiveShell = 0,Tricaster = 0,Livestream = 0,)
+		self.frequency_count = dict(vidiu = 0,beam = 0,liveshell = 0,tricaster = 0,livestream = 0)
 		self.base_url = 'https://www.google.com.tw'
+		self.url2weight = {}
+		self.done = False
 		dispatcher.connect(self.spider_closed, signals.spider_closed)
 
-	def frequency_renew(self,key_word,doc):
-		self.frequency_count[key_word]+=doc.count(key_word)
+	def frequency_renew(self,key_word,doc,score):
+		doc = doc.lower()
+		self.frequency_count[key_word]+=(doc.count(key_word)*score)
 
 	def parse(self, response):
-
-		# 實例化儲存物件
-		item = GooglesearchItem()
-
+		
+		
+		
 		hxs = HtmlXPathSelector(response)
 		
-		
-		# 抓取各搜尋資料之資訊
-		for data in hxs.select('//div[@id="ires"]//div[@class="g"]//div[@class="s"]//span[@class="st"]'):
-			item['description'] = ''.join(data.select('text()').extract())
+		for sel in hxs.select('//div[@id="ires"]//div[@class="g"]'):
+
 			
-			list(map(lambda key_word:self.frequency_renew(key_word,item['description']), self.frequency_count))
-			yield item
+			name = u''.join(sel.select(".//div[@class='s']//text()").extract())
+			
+			#url = self._parse_url(sel.select('.//a/@href').extract()[0])
+			url = sel.select('.//a/@href').extract()[0]
+			
+			
+			
+			
+			
+			if url.startswith('http'):
+				formdata = {'name': url}
+				
+				yield FormRequest(url = 'https://checkpagerank.net/check-page-rank.php',
+                    		formdata=formdata,
+                    		meta={'url':url},
+                            callback=self.parse1)
+
+
+				
+			else:
+				url = self.base_url+url
+				formdata = {'name': url}
+				
+				yield FormRequest(url = 'https://checkpagerank.net/check-page-rank.php',
+                    		formdata=formdata,
+                    		meta={'url':url},
+                            callback=self.parse1)
+
+
+			if self.done:
+				self.done = False
+				yield Request(url = url,callback = self.parse_page,meta={'name':name})
+
+			
+			
 
 
 		# 抓取下一頁之url
@@ -52,12 +90,71 @@ class GooglesearchspiderSpider(scrapy.Spider):
 		# 訪問下一頁之url
 		if next_page:
 			request_url = self.base_url+next_page.select('.//@href').extract()[0]
+			#print(request_url)
 			yield Request(url=request_url, callback=self.parse)
-
-	def spider_closed(self, spider):
-		print("END")
-		print('frequency_count:',self.frequency_count)
 		
 
+	def parse1(self,response):
+		#response = fromstring(response.content)
+		
+		
+		url = response.meta['url']
+		score = response.xpath('//*[@id="pdfdiv"]/div[5]/div/h2/font[2]/b/text()').extract()
+		
+		
 
+		if type(score)==list:
+			score = score[0].replace('/10','')
+		else:
+			score.replace('/10','')
+
+		if score:
+			self.url2weight[url] = int(score)
+		else:
+			self.url2weight[url] = 1
+
+		self.done = True
+		
+
+	def parse_page(self,response):
+
+		item = GooglesearchItem()
+		sel = Selector(response)
+		name = response.meta['name']
+		url = response.url
+
+
+		
+		html = w3lib.html.remove_tags(
+		    w3lib.html.remove_tags_with_content(
+		        sel.xpath('//body').extract()[0],
+		        which_ones=('script',)
+		    )
+		)
+		
+		pattern = re.compile(r"\s+")
+		html = pattern.sub(" ", html)
+		item['name'] = name
+		item['description'] = html
+		item['url'] = url
+		
+
+		
+
+		#r = requests.post('https://checkpagerank.net/check-page-rank.php', data = formdata)
+
+		#self.parse1(r)
+		#time.sleep(90)
+		
+		
+        
+		item['score'] = self.url2weight[url]
+		list(map(lambda key_word:self.frequency_renew(key_word,item['description'],item['score']), self.frequency_count))
+		list(map(lambda key_word:self.frequency_renew(key_word,item['name'],item['score']), self.frequency_count))
+
+		yield item
+		
+	def spider_closed(self, spider):
+		print("END")
+		print('得分:',self.frequency_count)
 

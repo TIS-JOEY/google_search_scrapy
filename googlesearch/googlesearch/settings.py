@@ -27,13 +27,13 @@ ROBOTSTXT_OBEY = False
 # Configure a delay for requests for the same website (default: 0)
 # See https://doc.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-#DOWNLOAD_DELAY = 3
+DOWNLOAD_DELAY = 61
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN = 16
 #CONCURRENT_REQUESTS_PER_IP = 16
 
 # Disable cookies (enabled by default)
-#COOKIES_ENABLED = False
+COOKIES_ENABLED = False
 
 # Disable Telnet Console (enabled by default)
 #TELNETCONSOLE_ENABLED = False
@@ -52,9 +52,33 @@ ROBOTSTXT_OBEY = False
 
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
-#DOWNLOADER_MIDDLEWARES = {
-#    'googlesearch.middlewares.GooglesearchDownloaderMiddleware': 543,
-#}
+
+# Retry many times since proxies often fail
+RETRY_TIMES = 10
+# Retry on most error codes since proxies fail for different reasons
+RETRY_HTTP_CODES = [500, 503, 504, 400, 403, 404, 408]
+
+
+# Proxy list containing entries like
+# http://host1:port
+# http://username:password@host2:port
+# http://host3:port
+PROXY_LIST = 'googlesearch/iplist.txt'
+
+
+
+RANDOM_UA_PER_PROXY = True
+DOWNLOADER_MIDDLEWARES = {
+	
+    'scrapy.downloadermiddlewares.retry.RetryMiddleware': 90,
+    'scrapy_proxies.RandomProxy': 100,
+    'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware': 110,
+	'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
+	'scrapy_fake_useragent.middleware.RandomUserAgentMiddleware': 400
+    #'googlesearch.middlewares.GooglesearchDownloaderMiddleware': 543,
+}
+
+PROXY_MODE = 0
 
 # Enable or disable extensions
 # See https://doc.scrapy.org/en/latest/topics/extensions.html
