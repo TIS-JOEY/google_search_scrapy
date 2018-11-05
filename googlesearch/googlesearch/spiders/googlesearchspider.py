@@ -30,9 +30,9 @@ class GooglesearchspiderSpider(scrapy.Spider):
 
 	base_url_fmt = 'https://www.google.com.tw/search?q={query}'
 
-	def __init__(self,queries):
+	def __init__(self,queries,brandname):
 		self.queries = queries.split(';')
-		self.frequency_count = dict(vidiu = 0,beam = 0,liveshell = 0,tricaster = 0,livestream = 0)
+		self.frequency_count = {brand:0 for brand in brandname.split(';')}
 		self.base_url = 'https://www.google.com.tw'
 		self.url2weight = {}
 		self.done = False
@@ -73,7 +73,7 @@ class GooglesearchspiderSpider(scrapy.Spider):
 			
 			if url.startswith('http'):
 				formdata = {'name': url}
-
+				
 				
 				yield FormRequest(url = 'https://checkpagerank.net/check-page-rank.php',
 							formdata=formdata,
@@ -85,14 +85,14 @@ class GooglesearchspiderSpider(scrapy.Spider):
 			else:
 				url = self.base_url+url
 				formdata = {'name': url}
-
+				
 				
 				yield FormRequest(url = 'https://checkpagerank.net/check-page-rank.php',
 							formdata=formdata,
 							meta={'url':url},
 							callback=self.parsePageRank)
 				
-
+			
 			if self.done:
 				self.done = False
 				yield Request(url = url,callback = self.parse_page,meta={'name':name})
