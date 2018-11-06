@@ -15,3 +15,4 @@ class GooglesearchItem(scrapy.Item):
     name = scrapy.Field()
     url = scrapy.Field()
     score = scrapy.Field()
+    all_text = scrapy.Field()

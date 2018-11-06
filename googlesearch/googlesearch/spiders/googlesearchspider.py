@@ -53,6 +53,10 @@ class GooglesearchspiderSpider(scrapy.Spider):
 
 		dispatcher.connect(self.spider_closed, signals.spider_closed)
 
+		for filename in os.listdir():
+			if filename.endswith('.json'):
+				os.remove(filename)
+
 	def start_requests(self):
 
 		# 依序將查詢詞投入Google搜尋並進行解析
@@ -124,7 +128,7 @@ class GooglesearchspiderSpider(scrapy.Spider):
 		next_page = hxs.select('//table[@id="nav"]//td[contains(@class, "b") and position() = last()]/a')
 		if next_page:
 			request_url = self.base_url+next_page.select('.//@href').extract()[0]
-			yield Request(url=request_url, callback=self.parse)
+			#yield Request(url=request_url, callback=self.parse)
 		
 
 	# 查詢PageRank
@@ -213,7 +217,7 @@ class GooglesearchspiderSpider(scrapy.Spider):
 		vectorizer = CountVectorizer()# 詞頻矩陣
 		transformer = TfidfTransformer()#各詞tfidf權重
 		tfidf = transformer.fit_transform(vectorizer.fit_transform(self.corpus))#第一個fit_transform是計算tf-idf，第二個fit_transform是轉換為詞頻矩陣
-		word = vectorizer.get_feature_names()#曲的所有詞語
+		word = vectorizer.get_feature_names()#取得所有詞語
 		self.tfidf_weight = tfidf.toarray()
 
 	self.word2index = {}
