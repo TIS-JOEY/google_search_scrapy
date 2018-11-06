@@ -11,11 +11,15 @@ from scrapy.xlib.pydispatch import dispatcher
 from scrapy.http import FormRequest
 from googlesearch.items import GooglesearchItem
 import requests
-from scrapy.utils.misc import arg_to_iter
 
 # 處理網頁資料
 import re
 import w3lib
+
+# 其他
+import numpy as np
+import matplotlib.pyplot as plt
+from scrapy.utils.misc import arg_to_iter
 
 class GooglesearchspiderSpider(scrapy.Spider):
 	
@@ -161,7 +165,20 @@ class GooglesearchspiderSpider(scrapy.Spider):
 
 		yield item
 	
+	
+	# this is for plotting purpose
+	def plot_bar(self):
+	    index = np.arange(len(self.frequency_count.keys()))
+	    plt.bar(index, self.frequency_count.values())
+	    plt.xlabel('Degree of ClickHeat', fontsize=1)
+	    plt.ylabel('Brand', fontsize=12)
+	    plt.xticks(index, self.frequency_count.keys(), fontsize=12, rotation=30)
+	    plt.title('ClickHeat')
+	    plt.show()
+
 	# 結束爬蟲，顯示品牌熱度
 	def spider_closed(self, spider):
 		print("END")
 		print('得分:',self.frequency_count)
+		self.plot_bar()
+
