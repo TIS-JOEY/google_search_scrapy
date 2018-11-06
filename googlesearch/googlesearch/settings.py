@@ -74,7 +74,7 @@ DOWNLOADER_MIDDLEWARES = {
     'scrapy_proxies.RandomProxy': 100,
     'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware': 110,
 	'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
-	'scrapy_fake_useragent.middleware.RandomUserAgentMiddleware': 400
+	'scrapy_fake_useragent.middleware.RandomUserAgentMiddleware': 80
     #'googlesearch.middlewares.GooglesearchDownloaderMiddleware': 543,
 }
 
