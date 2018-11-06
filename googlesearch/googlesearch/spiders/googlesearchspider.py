@@ -128,12 +128,12 @@ class GooglesearchspiderSpider(scrapy.Spider):
 				score.replace('/10','')
 
 			if score:
-				self.url2weight[url] = int(score)
+				self.url2weight[url] = float(score)
 			else:
-				self.url2weight[url] = 1
+				self.url2weight[url] = 1.0
 		else:
 			
-			self.url2weight[url] = 1
+			self.url2weight[url] = 1.0
 
 		
 		
