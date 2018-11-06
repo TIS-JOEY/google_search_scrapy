@@ -20,6 +20,14 @@ import w3lib
 import numpy as np
 import matplotlib.pyplot as plt
 from scrapy.utils.misc import arg_to_iter
+import json
+import jieba
+import jieba.posseg as pseg
+import os
+import sys
+from sklearn import feature_extraction
+from sklearn.feature_extraction.text import TfidfTransformer
+from sklearn.feature_extraction.text import CountVectorizer
 
 class GooglesearchspiderSpider(scrapy.Spider):
 	
@@ -34,8 +42,9 @@ class GooglesearchspiderSpider(scrapy.Spider):
 		self.queries = queries.split(';')
 
 		# 欲計算之品牌
-		self.frequency_count = {brand:0 for brand in brandname.split(';')}
-		
+		self.normal_frequency_count = {brand:0 for brand in brandname.split(';')}
+		self.tfidf_frequency_count = {brand:0 for brand in brandname.split(';')}
+
 		# PageRank權重
 		self.url2weight = {}
 
@@ -57,11 +66,15 @@ class GooglesearchspiderSpider(scrapy.Spider):
 		# 製作Google查詢之URL
 		return self.base_url_fmt.format(query='+'.join(query.split()).strip('+'))
 
-	def frequency_renew(self,key_word,doc,score):
+	def frequency_renew(self,key_word,doc,score,tfidf = False):
 
 		# 計算品牌熱度
 		doc = doc.lower()
-		self.frequency_count[key_word]+=(doc.count(key_word)*score)
+
+		if tfidf:
+			self.tfidf_frequency_count[key_word]+=(doc.count(key_word)*score)
+		else:
+			self.normal_frequency_count[key_word]+=(doc.count(key_word)*score)
 
 	def parse(self, response):
 		
@@ -157,28 +170,66 @@ class GooglesearchspiderSpider(scrapy.Spider):
 		html = pattern.sub(" ", html)
 		item['name'] = name
 		item['description'] = html
+		item['all_text'] = name+' '+html
 		item['url'] = url		
 		item['score'] = self.url2weight[url]
 
-		list(map(lambda key_word:self.frequency_renew(key_word,item['description'],item['score']), self.frequency_count))
-		list(map(lambda key_word:self.frequency_renew(key_word,item['name'],item['score']), self.frequency_count))
-
+		list(map(lambda key_word:self.frequency_renew(key_word,item['all_text'],item['score']), self.normal_frequency_count))
+		
 		yield item
 	
 	
 	# this is for plotting purpose
-	def plot_bar(self):
-	    index = np.arange(len(self.frequency_count.keys()))
-	    plt.bar(index, self.frequency_count.values())
+	def plot_bar(self,frequency_count):
+	    index = np.arange(len(frequency_count.keys()))
+	    plt.bar(index, frequency_count.values())
 	    plt.xlabel('Degree of ClickHeat', fontsize=1)
 	    plt.ylabel('Brand', fontsize=12)
-	    plt.xticks(index, self.frequency_count.keys(), fontsize=12, rotation=30)
+	    plt.xticks(index, frequency_count.keys(), fontsize=12, rotation=30)
 	    plt.title('ClickHeat')
 	    plt.show()
+
+	def _tfidf_transfer(self,data):
+		document = ''
+		for sentence in jieba.cut(data['all_text']):
+			filter_string = ''.join(list(filter(str.isalpha, sentence.lower())))
+			document+=(filter_string+' ')
+		self.pageRank_score.append(data['score'])
+		return document
+
+	def tfidf_transfer(self):
+
+		for filename in os.listdir():
+			if filename.endswith('.json'):
+				corpus_path = filename
+
+		self.pageRank_score = []
+		with open(corpus_path,'r') as f:
+			datas = json.load(f)
+
+		self.corpus = list(map(self._tfidf_transfer,datas))
+		
+
+		vectorizer = CountVectorizer()# 詞頻矩陣
+		transformer = TfidfTransformer()#各詞tfidf權重
+		tfidf = transformer.fit_transform(vectorizer.fit_transform(self.corpus))#第一個fit_transform是計算tf-idf，第二個fit_transform是轉換為詞頻矩陣
+		word = vectorizer.get_feature_names()#曲的所有詞語
+		self.tfidf_weight = tfidf.toarray()
+
+	self.word2index = {}
+	for key_word in self.tfidf_frequency_count:
+		self.word2index[key_word] = self.word.index(key_word) if key_word in self.word else 0
+
+	def tfidf_get_score(self):
+		self.tfidf_transfer()
+		for document_index in range(len(self.corpus)):
+			list(map(lambda key_word:self.frequency_renew(key_word,self.corpus[document_index],self.pageRank_score[document_index]*self.tfidf_weight[document_index][self.word2index[key_word]] ,tfidf = True), self.tfidf_frequency_count))
 
 	# 結束爬蟲，顯示品牌熱度
 	def spider_closed(self, spider):
 		print("END")
-		print('得分:',self.frequency_count)
-		self.plot_bar()
+		print('pageRank得分:',self.normal_frequency_count)
+		self.plot_bar(self.normal_frequency_count)
+		print('pageRank+tfidf得分:',self.tfidf_frequency_count)
+		self.plot_bar(self.tfidf_frequency_count)
 
