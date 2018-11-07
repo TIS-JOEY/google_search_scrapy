@@ -128,7 +128,7 @@ class GooglesearchspiderSpider(scrapy.Spider):
 		next_page = hxs.select('//table[@id="nav"]//td[contains(@class, "b") and position() = last()]/a')
 		if next_page:
 			request_url = self.base_url+next_page.select('.//@href').extract()[0]
-			#yield Request(url=request_url, callback=self.parse)
+			yield Request(url=request_url, callback=self.parse)
 		
 
 	# 查詢PageRank
@@ -169,16 +169,23 @@ class GooglesearchspiderSpider(scrapy.Spider):
 				which_ones=('script',)
 			)
 		)
+
+		all_link = ' '.join(sel.xpath('*//a/@href').extract())
+		all_h = ' '.join(sel.xpath('//h1/text()').extract())+' '.join(sel.xpath('//h2/text()').extract())+' '.join(sel.xpath('//h3/text()').extract())
+		all_p = ' '.join(sel.xpath('//p/text()').extract())
 		
 		pattern = re.compile(r"\s+")
+
 		html = pattern.sub(" ", html)
+		important_sentence = pattern.sub(" ",all_link+" "+all_h+" "+all_p+" "+name)
+
 		item['name'] = name
 		item['description'] = html
-		item['all_text'] = name+' '+html
+		item['important_sentence'] = important_sentence
 		item['url'] = url		
 		item['score'] = self.url2weight[url]
 
-		list(map(lambda key_word:self.frequency_renew(key_word,item['all_text'],item['score']), self.normal_frequency_count))
+		list(map(lambda key_word:self.frequency_renew(key_word,item['important_sentence'],item['score']), self.normal_frequency_count))
 		
 		yield item
 	
@@ -195,7 +202,8 @@ class GooglesearchspiderSpider(scrapy.Spider):
 
 	def _tfidf_transfer(self,data):
 		document = ''
-		for sentence in jieba.cut(data['all_text']):
+		jieba.add_word('livestream box')
+		for sentence in jieba.cut(data['important_sentence']):
 			filter_string = ''.join(list(filter(str.isalpha, sentence.lower())))
 			document+=(filter_string+' ')
 		self.pageRank_score.append(data['score'])
@@ -220,9 +228,9 @@ class GooglesearchspiderSpider(scrapy.Spider):
 		word = vectorizer.get_feature_names()#取得所有詞語
 		self.tfidf_weight = tfidf.toarray()
 
-	self.word2index = {}
-	for key_word in self.tfidf_frequency_count:
-		self.word2index[key_word] = self.word.index(key_word) if key_word in self.word else 0
+		self.word2index = {}
+		for key_word in self.tfidf_frequency_count:
+			self.word2index[key_word] = self.word.index(key_word) if key_word in self.word else 0
 
 	def tfidf_get_score(self):
 		self.tfidf_transfer()
