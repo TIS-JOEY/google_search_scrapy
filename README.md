@@ -13,6 +13,9 @@ $ cd google_search_scrapy
 $ pip install -r requirements.txt
 ```
 
+### Require
+請申請Plotly帳戶，並至googleTrend.py中填寫username與API KEY。
+
 ## Usage
 ### 顯性搜尋熱度
 
@@ -28,11 +31,13 @@ python googleTrend.py -o 'vidiu;beam;livestream' -c 612 -d '2016-01-01 2018-11-0
 ```
 ### 隱性搜尋熱度
 註：iplist.txt檔為存儲代理IP的檔案。
+
+-a quires：所要查詢的詞，若要查詢多個詞請以分號;隔開。
+-a brandname：所要計算的品牌名，若有多個請以分號;隔開。
+-o 檔名.json：儲存爬文資料的檔案。
 ```
 $ cd googlesearch
 
-# quires為所要查詢的詞，若要查詢多個詞請以分號;隔開。
-# brandname為所要計算的品牌名，若有多個請以分號;隔開。
 $ scrapy crawl googlesearchspider -a queries='livebox;livestream' -a brandname='vidiu;livestream;beam;tricaster;liveshell' -o crawl.json
 ```
 
