@@ -18,7 +18,7 @@ $ pip install -r requirements.txt
 ```
 
 ## Usage
-### 顯性搜尋熱度
+## 顯性搜尋熱度
 
 -o： 請輸入欲查詢之關鍵字列表，請以分號;分隔。
 
@@ -30,7 +30,7 @@ $ pip install -r requirements.txt
 ```
 python googleTrend.py -o 'vidiu;beam;livestream' -c 612 -d '2016-01-01 2018-11-08'
 ```
-### 隱性搜尋熱度
+## 隱性搜尋熱度
 註：iplist.txt檔為存儲代理IP的檔案。
 
 -a quires：所要查詢的詞，若要查詢多個詞請以分號;隔開。
