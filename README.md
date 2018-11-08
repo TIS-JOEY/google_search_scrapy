@@ -1,10 +1,14 @@
 # google_search_scrapy
-### 簡介
+## Abstract
 現有的Google Trend僅能處理查詢之關鍵字的搜尋熱度，但無法查知品牌在該產品中的隱性熱度為何。
 因此，我們將Google Trend所得到的搜尋熱度作為顯性搜尋熱度。
 而對於隱性搜尋熱度，則依所要查詢之google關鍵字產品進行Google搜尋爬文，並以Google的Page Rank來作為網頁中關鍵字的權重，最後產生各個相關品牌的隱性搜尋熱度排行。
 
-### 安裝
+### Require
+請申請Plotly帳戶，並至googleTrend.py中填寫username與API KEY。
+
+
+### Installation
 ```
 git clone https://github.com/TIS-JOEY/google_search_scrapy.git
 ```
@@ -12,9 +16,6 @@ git clone https://github.com/TIS-JOEY/google_search_scrapy.git
 $ cd google_search_scrapy
 $ pip install -r requirements.txt
 ```
-
-### Require
-請申請Plotly帳戶，並至googleTrend.py中填寫username與API KEY。
 
 ## Usage
 ### 顯性搜尋熱度
