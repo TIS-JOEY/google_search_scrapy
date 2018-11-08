@@ -200,6 +200,25 @@ class GooglesearchspiderSpider(scrapy.Spider):
 	    plt.title('ClickHeat')
 	    plt.show()
 
+	def plotly_bar(self,frequency_count):
+		import plotly.plotly as py
+		import plotly.graph_objs as go
+		import plotly
+
+		plotly.tools.set_credentials_file(username='your username', api_key='your api key')
+
+		for key,value in frequency_count.items():
+			go.Bar(
+			            x=[key],
+			            y=[value],
+			            text=[value],
+			            textposition = 'auto',
+			            marker= dict(color='rgb({0},{1},{2})'.format(random.randint(1,255),random.randint(1,255),random.randint(1,255)),line=dict(color='rgb(8,48,107)',width=1.5),),
+			            opacity=0.6
+			        )
+
+		py.iplot(data, filename='bar-direct-labels')
+
 	def _tfidf_transfer(self,data):
 		document = ''
 		jieba.add_word('livestream box')
