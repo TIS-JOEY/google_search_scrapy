@@ -16,9 +16,13 @@ $ pip install -r requirements.txt
 ## Usage
 ### 顯性搜尋熱度
 
--o： 請輸入欲查詢之關鍵字列表，請以分號;分隔
+-o： 請輸入欲查詢之關鍵字列表，請以分號;分隔。
+
 -c：請輸入欲查詢之類別對應碼，https://github.com/pat310/google-trends-api/wiki/Google-Trends-Categories
+
 -d：請輸入欲查詢之期間，以YYYY-MM-DD編寫，起始日期與結束日期請以空格分隔，舉例："2016-12-14 2017-01-25"，若要選擇所有期間，請編寫all。
+
+
 ```
 python googleTrend.py -o 'vidiu;beam;livestream' -c 612 -d '2016-01-01 2018-11-08'
 ```
