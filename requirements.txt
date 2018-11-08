@@ -1,2 +1,4 @@
 scrapy_proxies
 scrapy-fake-useragent
+pytrends
+plotly

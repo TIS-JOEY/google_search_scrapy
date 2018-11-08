@@ -25,9 +25,11 @@ import jieba
 import jieba.posseg as pseg
 import os
 import sys
+import random
 from sklearn import feature_extraction
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.feature_extraction.text import CountVectorizer
+
 
 class GooglesearchspiderSpider(scrapy.Spider):
 	
@@ -128,7 +130,7 @@ class GooglesearchspiderSpider(scrapy.Spider):
 		next_page = hxs.select('//table[@id="nav"]//td[contains(@class, "b") and position() = last()]/a')
 		if next_page:
 			request_url = self.base_url+next_page.select('.//@href').extract()[0]
-			yield Request(url=request_url, callback=self.parse)
+			#yield Request(url=request_url, callback=self.parse)
 		
 
 	# 查詢PageRank
@@ -205,17 +207,18 @@ class GooglesearchspiderSpider(scrapy.Spider):
 		import plotly.graph_objs as go
 		import plotly
 
-		plotly.tools.set_credentials_file(username='your username', api_key='your api key')
+		plotly.tools.set_credentials_file(username='TIS-JOEY', api_key='jU8KZYrSWISLzElR3x3v')
 
+		data = []
 		for key,value in frequency_count.items():
-			go.Bar(
+			data.append(go.Bar(
 			            x=[key],
 			            y=[value],
 			            text=[value],
 			            textposition = 'auto',
 			            marker= dict(color='rgb({0},{1},{2})'.format(random.randint(1,255),random.randint(1,255),random.randint(1,255)),line=dict(color='rgb(8,48,107)',width=1.5),),
 			            opacity=0.6
-			        )
+			        ))
 
 		py.iplot(data, filename='bar-direct-labels')
 
@@ -260,7 +263,9 @@ class GooglesearchspiderSpider(scrapy.Spider):
 	def spider_closed(self, spider):
 		print("END")
 		print('pageRank得分:',self.normal_frequency_count)
+		self.plotly_bar(self.normal_frequency_count)
 		self.plot_bar(self.normal_frequency_count)
 		print('pageRank+tfidf得分:',self.tfidf_frequency_count)
+		self.plotly_bar(self.tfidf_frequency_count)
 		self.plot_bar(self.tfidf_frequency_count)
 
