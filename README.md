@@ -32,7 +32,7 @@ $ pip install -r requirements.txt
 python googleTrend.py -o 'vidiu;beam;livestream' -c 612 -d '2016-01-01 2018-11-08'
 ```
 
-### 隱性搜尋熱度
+### 隱性搜尋熱度 - PageRank & PageRank+TFIDF
 註：iplist.txt檔為存儲代理IP的檔案。
 
 -a quires：所要查詢的詞，若要查詢多個詞請以分號;隔開。
@@ -42,6 +42,13 @@ python googleTrend.py -o 'vidiu;beam;livestream' -c 612 -d '2016-01-01 2018-11-0
 $ cd googlesearch
 
 $ scrapy crawl googlesearchspider -a queries='livebox;livestream' -a brandname='vidiu;livestream;beam;tricaster;liveshell' -o crawl.json
+```
+
+### 隱性搜尋熱度 - Matrix Factorization
+
+-o brandname：所要計算的品牌名，若有多個請以分號;隔開。
+```
+python mf_scoring.py -o 'vidiu;livestream'
 ```
 
 
