@@ -32,7 +32,7 @@ $ pip install -r requirements.txt
 python googleTrend.py -o 'vidiu;beam;livestream' -c 612 -d '2016-01-01 2018-11-08'
 ```
 
-### 爬蟲
+### Google搜尋爬蟲
 註：iplist.txt檔為存儲代理IP的檔案。
 
 -a quires：所要查詢的詞，若要查詢多個詞請以分號;隔開。
