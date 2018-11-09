@@ -130,7 +130,7 @@ class GooglesearchspiderSpider(scrapy.Spider):
 		next_page = hxs.select('//table[@id="nav"]//td[contains(@class, "b") and position() = last()]/a')
 		if next_page:
 			request_url = self.base_url+next_page.select('.//@href').extract()[0]
-			#yield Request(url=request_url, callback=self.parse)
+			yield Request(url=request_url, callback=self.parse)
 		
 
 	# 查詢PageRank
@@ -187,7 +187,7 @@ class GooglesearchspiderSpider(scrapy.Spider):
 		item['url'] = url		
 		item['score'] = self.url2weight[url]
 
-		list(map(lambda key_word:self.frequency_renew(key_word,item['important_sentence'],item['score']), self.normal_frequency_count))
+		#list(map(lambda key_word:self.frequency_renew(key_word,item['important_sentence'],item['score']), self.normal_frequency_count))
 		
 		yield item
 	
@@ -262,10 +262,10 @@ class GooglesearchspiderSpider(scrapy.Spider):
 	# 結束爬蟲，顯示品牌熱度
 	def spider_closed(self, spider):
 		print("END")
-		print('pageRank得分:',self.normal_frequency_count)
-		self.plotly_bar(self.normal_frequency_count)
-		self.plot_bar(self.normal_frequency_count)
-		print('pageRank+tfidf得分:',self.tfidf_frequency_count)
-		self.plotly_bar(self.tfidf_frequency_count)
-		self.plot_bar(self.tfidf_frequency_count)
+		#print('pageRank得分:',self.normal_frequency_count)
+		#self.plotly_bar(self.normal_frequency_count)
+		#self.plot_bar(self.normal_frequency_count)
+		#print('pageRank+tfidf得分:',self.tfidf_frequency_count)
+		#self.plotly_bar(self.tfidf_frequency_count)
+		#self.plot_bar(self.tfidf_frequency_count)
 
