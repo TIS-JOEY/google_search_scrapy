@@ -44,7 +44,7 @@ $ cd googlesearch
 $ scrapy crawl googlesearchspider -a queries='livebox;livestream' -a brandname='vidiu;livestream;beam;tricaster;liveshell' -o crawl.json
 ```
 
-### 隱性搜尋熱度 - PageRank & PageRank+TFIDF & PageRank+Matrix Factorization
+### 隱性搜尋熱度 - PageRank & PageRank+TFIDF & PageRank+Nonnegative Matrix Factorization(NMF)
 
 -o brandname：所要計算的品牌名，若有多個請以分號;隔開。
 ```
